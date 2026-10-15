@@ -30,7 +30,8 @@ with tempfile.TemporaryDirectory(prefix="ql-check-", dir=root / "artifacts") as 
     core = ctypes.CDLL(str(extension / "Contents/Frameworks/FatturePreviewCore.dylib"))
     core.fatture_preview.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
     core.fatture_preview.restype = ctypes.c_int32
-    samples = sorted(p for p in (root / "esempi").iterdir() if p.suffix in {".xml", ".p7m", ".eml"})
+    sample_directory = root / "esempi" if (root / "esempi").is_dir() else root / "tests/fixtures"
+    samples = sorted(p for p in sample_directory.iterdir() if p.suffix in {".xml", ".p7m", ".eml"})
     assert samples, "Mancano i documenti di esempio"
     for index, source in enumerate(samples):
         output = directory / "native" / str(index)
@@ -68,9 +69,10 @@ with tempfile.TemporaryDirectory(prefix="ql-check-", dir=root / "artifacts") as 
         time.sleep(0.5)
         ordinary = directory / "ordinary.xml"
         ordinary.write_text("<metadata><message>Non è una fattura</message></metadata>")
-        cases = [(root / "esempi/IT04270090261_0002I.xml", "PDF"),
-                 (root / "esempi/IT04270090261_0001C.xml.p7m", "PDF"),
-                 (ordinary, "XML text")]
+        cases = [(root / "tests/fixtures/invoice.xml", "PDF")]
+        signed = next((sample for sample in samples if sample.suffix == ".p7m"), None)
+        if signed: cases.append((signed, "PDF"))
+        cases.append((ordinary, "XML text"))
         for index, (source, expected) in enumerate(cases):
             selected = directory / (str(index) + "-" + source.name)
             shutil.copy2(source, selected)

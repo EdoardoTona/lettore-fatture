@@ -12,6 +12,8 @@ case "$RID" in
     *) echo 'Usa osx-arm64 oppure osx-x64' >&2; exit 1 ;;
 esac
 OUTPUT="${FATTURE_OUTPUT_DIR:-$ROOT/artifacts/macos}"
+VERSION="${FATTURE_VERSION:-$(cat "$ROOT/VERSION")}"
+export FATTURE_VERSION="$VERSION"
 APP="$OUTPUT/Lettore Fatture.app"
 mkdir -p "$OUTPUT"
 STAGE="$(mktemp -d "$OUTPUT/.package.XXXXXX")"
@@ -21,6 +23,7 @@ EXTENSION="$BUNDLE/Contents/PlugIns/FatturePreview.appex"
 BRIDGE="$BUNDLE/Contents/Resources/bridge"
 mkdir -p "$BUNDLE/Contents/MacOS" "$BUNDLE/Contents/Resources" "$BRIDGE"
 cp "$ROOT/packaging/macos/Info.plist" "$BUNDLE/Contents/Info.plist"
+python3 "$ROOT/packaging/macos/stamp-version.py" "$BUNDLE/Contents/Info.plist"
 xcrun swiftc -parse-as-library -O -module-cache-path "${TMPDIR:-/tmp}/lettore-fatture-swift-cache" \
     -target "$TARGET" "$ROOT/src/Fatture.Mac/"*.swift \
     -framework AppKit -framework PDFKit -framework UniformTypeIdentifiers -o "$BUNDLE/Contents/MacOS/LettoreFatture"
@@ -29,7 +32,7 @@ xcrun swiftc -O -module-cache-path "${TMPDIR:-/tmp}/lettore-fatture-swift-cache"
 "$STAGE/generate-icon" "$STAGE/LettoreFatture.iconset"
 iconutil -c icns "$STAGE/LettoreFatture.iconset" -o "$BUNDLE/Contents/Resources/LettoreFatture.icns"
 "$DOTNET" msbuild "$ROOT/src/Fatture.Cli/Fatture.Cli.csproj" -t:Publish -restore -m:1 -nodeReuse:false \
-    -p:Configuration=Release -p:RuntimeIdentifier="$RID" -p:SelfContained=true \
+    -p:Configuration=Release -p:Version="$VERSION" -p:RuntimeIdentifier="$RID" -p:SelfContained=true \
     -p:_DotNetHostDirectory="$(dirname "$DOTNET")" -p:_DotNetHostFileName="$(basename "$DOTNET")" \
     -p:RuntimeFrameworkVersion=10.0.13 -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true \
     -p:PublishTrimmed=true -p:TrimMode=partial -p:ILLinkTreatWarningsAsErrors=true \
@@ -44,12 +47,13 @@ cp "$RUNTIME_PACKAGE/LICENSE.TXT" "$LICENSES/Dotnet-LICENSE.txt"
 cp "$RUNTIME_PACKAGE/THIRD-PARTY-NOTICES.TXT" "$LICENSES/Dotnet-THIRD-PARTY-NOTICES.txt"
 mkdir -p "$EXTENSION/Contents/MacOS" "$EXTENSION/Contents/Frameworks"
 "$DOTNET" msbuild "$ROOT/src/Fatture.Preview/Fatture.Preview.csproj" -t:Publish -restore -m:1 -nodeReuse:false \
-    -p:Configuration=Release -p:RuntimeIdentifier="$RID" -p:RuntimeFrameworkVersion=10.0.13 -p:SelfContained=true \
+    -p:Configuration=Release -p:Version="$VERSION" -p:RuntimeIdentifier="$RID" -p:RuntimeFrameworkVersion=10.0.13 -p:SelfContained=true \
     -p:UseSharedCompilation=false -p:DebugType=none -p:DebugSymbols=false -p:StripSymbols=true \
     -p:PublishDir="$STAGE/native/"
 cp "$STAGE/native/FatturePreviewCore.dylib" "$EXTENSION/Contents/Frameworks/"
 codesign --force --sign - "$EXTENSION/Contents/Frameworks/FatturePreviewCore.dylib"
 cp "$ROOT/packaging/macos/quicklook/Info.plist" "$EXTENSION/Contents/Info.plist"
+python3 "$ROOT/packaging/macos/stamp-version.py" "$EXTENSION/Contents/Info.plist"
 xcrun swiftc -parse-as-library -O -application-extension -module-name FatturePreview \
     -module-cache-path "${TMPDIR:-/tmp}/lettore-fatture-swift-cache" -target "$TARGET" \
     "$ROOT/src/Fatture.Mac/QuickLook/"*.swift \

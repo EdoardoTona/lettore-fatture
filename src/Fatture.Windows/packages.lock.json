@@ -2,11 +2,11 @@
   "version": 1,
   "dependencies": {
     "net10.0-windows10.0.19041": {
-      "Microsoft.NET.ILLink.Tasks": {
+      "Velopack": {
         "type": "Direct",
-        "requested": "[10.0.12, )",
-        "resolved": "10.0.12",
-        "contentHash": "xi+BDjFpW+Sb+MHFHaH6Y/gV9I8BluFwRXc1QyCdoZbIK26eNiBeFuMTe/FMwc33G1wdHCyDg7CVTmb8OdQrMQ=="
+        "requested": "[1.2.161, )",
+        "resolved": "1.2.161",
+        "contentHash": "OpHNacIumnkhaaX3ZlQ/TCR4YPOJvud2/PAOoWb6o+mIrLwIVA275I5wAgt4q/1O2VrJeDwR1qFQyqzG4lUArg=="
       },
       "Microsoft.Extensions.DependencyInjection.Abstractions": {
         "type": "Transitive",
@@ -59,7 +59,7 @@
       "fatture": {
         "type": "Project",
         "dependencies": {
-          "Fatture.Core": "[1.0.0, )"
+          "Fatture.Core": "[0.4.0, )"
         }
       },
       "fatture.core": {

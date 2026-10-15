@@ -67,11 +67,32 @@ in `HKCU`, con `OpenWithProgids` e comando eseguibile/percorso tra virgolette.
 Non modifica `UserChoice` o il valore predefinito delle estensioni: l’utente
 sceglie in Impostazioni. `--unregister` rimuove solo le chiavi dell’app.
 
-La distribuzione predefinita è un eseguibile self-contained compresso, con
-runtime Core e Desktop 10.0.13. Non si usa trimming su Windows Forms. Il progetto
+La distribuzione Windows include i file self-contained con runtime Core e
+Desktop 10.0.13: `PublishSingleFile`, compressione dell’eseguibile ed estrazione
+delle librerie native sono disabilitati. La compressione di ZIP e installer
+avviene soltanto per il download e non aggiunge decompressione all’avvio.
+Non si usa trimming su Windows Forms. Il progetto
 seleziona le versioni .NET senza forzare quella della proiezione Windows SDK,
 che ha una numerazione indipendente. Il [targeting Windows su Mac/Linux](https://learn.microsoft.com/en-us/dotnet/core/tools/sdk-errors/netsdk1100)
 permette la compilazione locale; il test grafico richiede Windows.
+
+L’installer usa [Velopack](https://docs.velopack.io/integrating/overview), SDK e
+tool 1.2.161. `VelopackApp.Build().Run()` è la prima operazione in `Main`, anche
+prima delle modalità headless; i callback veloci non creano finestre né avviano
+il core. Installazione/aggiornamento registrano le estensioni, disinstallazione
+rimuove le chiavi dell’app. I canali `win-x64` e `win-arm64` mantengono separati
+i feed. L’app non controlla o scarica aggiornamenti e l’applicazione automatica
+all’avvio è disabilitata, così il worker non può riavviarsi durante una richiesta.
+
+## Release
+
+`VERSION` è la sorgente comune per .NET, pacchetti Velopack e plist dei bundle
+Mac. Il workflow di release parte da un tag esistente, ne verifica il valore
+e passa lo stesso commit ai quattro job nativi. Solo il job finale ha permessi
+di scrittura. `validate-release.py` verifica architetture PE/Mach-O, versioni,
+presenza del runtime, integrità ZIP, footer DMG e hash dei pacchetti indicizzati
+nei feed. Produce SHA-256 per tutti gli asset. La release rimane in bozza fino
+al completamento degli upload e una release pubblicata non viene sovrascritta.
 
 ## Ricerca sulle librerie
 

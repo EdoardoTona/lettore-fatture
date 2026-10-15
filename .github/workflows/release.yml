@@ -1,0 +1,161 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag esistente da pubblicare, corrispondente a VERSION'
+        required: true
+        default: 'v0.4.0'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+      commit: ${{ steps.version.outputs.commit }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag && format('refs/tags/{0}', inputs.tag) || github.ref }}
+      - name: Validate release version
+        id: version
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          version=$(python3 packaging/release-version.py "$RELEASE_TAG")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  windows:
+    needs: prepare
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runtime: win-x64
+            runner: windows-2025
+          - runtime: win-arm64
+            runner: windows-11-arm
+    runs-on: ${{ matrix.runner }}
+    env:
+      TARGET_RUNTIME: ${{ matrix.runtime }}
+      RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - name: Core and bridge tests
+        run: dotnet test tests/Fatture.Tests -c Release
+      - name: Build portable app and Velopack installer
+        shell: pwsh
+        run: ./packaging/windows/installer.ps1 -Runtime $env:TARGET_RUNTIME -Version $env:RELEASE_VERSION
+      - name: Native PDF and app lifecycle
+        shell: pwsh
+        run: |
+          $executable = "./artifacts/windows-$($env:TARGET_RUNTIME.Substring(4))/LettoreFatture.exe"
+          ./packaging/windows/verify.ps1 -Executable $executable
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-${{ matrix.runtime }}
+          path: artifacts/releases/${{ matrix.runtime }}/*
+          if-no-files-found: error
+
+  macos:
+    needs: prepare
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runtime: osx-arm64
+            runner: macos-15
+          - runtime: osx-x64
+            runner: macos-15-intel
+    runs-on: ${{ matrix.runner }}
+    env:
+      TARGET_RUNTIME: ${{ matrix.runtime }}
+      FATTURE_VERSION: ${{ needs.prepare.outputs.version }}
+      FATTURE_BUILD_NUMBER: ${{ github.run_number }}
+      DOTNET_INSTALL_DIR: ${{ github.workspace }}/.build/ci-dotnet
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - name: Install runtime required by the NativeAOT linker
+        run: |
+          curl --fail --silent --show-error --location https://dot.net/v1/dotnet-install.sh -o "$RUNNER_TEMP/dotnet-install.sh"
+          bash "$RUNNER_TEMP/dotnet-install.sh" --runtime dotnet --version 10.0.13 --install-dir "$DOTNET_ROOT" --no-path
+      - name: Core and bridge tests
+        run: dotnet test tests/Fatture.Tests -c Release
+      - name: Build app, DMG and ZIP
+        run: bash packaging/macos/release.sh "$TARGET_RUNTIME"
+      - name: Verify native PDF and Excel
+        env:
+          FATTURE_SMOKE_INPUT: ${{ github.workspace }}/tests/fixtures/invoice.xml
+          FATTURE_SMOKE_EXPORT_PATH: ${{ runner.temp }}/fatture.xlsx
+        run: |
+          'artifacts/macos/Lettore Fatture.app/Contents/MacOS/LettoreFatture' --smoke-test
+          codesign --verify --deep --strict 'artifacts/macos/Lettore Fatture.app'
+          python3 packaging/macos/verify-window-close.py
+      - name: Verify Quick Look
+        run: |
+          bash packaging/macos/register.sh
+          python3 packaging/macos/verify-quicklook.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-${{ matrix.runtime }}
+          path: artifacts/releases/${{ matrix.runtime }}/*
+          if-no-files-found: error
+
+  publish:
+    needs: [prepare, windows, macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+      RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.commit }}
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: release-*
+          path: release
+          merge-multiple: true
+      - name: Validate assets and generate SHA-256 checksums
+        run: python3 packaging/validate-release.py release "$RELEASE_VERSION"
+      - name: Publish complete release
+        run: |
+          if gh release view "$RELEASE_TAG" --json isDraft > "$RUNNER_TEMP/release.json" 2>/dev/null; then
+            python3 -c 'import json,sys; sys.exit(0 if json.load(open(sys.argv[1]))["isDraft"] else "Release già pubblicata: non viene sovrascritta.")' "$RUNNER_TEMP/release.json"
+          else
+            gh release create "$RELEASE_TAG" --verify-tag --draft --title "Lettore Fatture $RELEASE_VERSION" --generate-notes
+          fi
+          gh release upload "$RELEASE_TAG" release/* --clobber
+          if [[ "$RELEASE_VERSION" == *-* ]]; then
+            gh release edit "$RELEASE_TAG" --draft=false --prerelease --latest=false
+          else
+            gh release edit "$RELEASE_TAG" --draft=false --prerelease=false --latest
+          fi

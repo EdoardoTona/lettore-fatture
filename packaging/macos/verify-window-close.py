@@ -9,6 +9,7 @@ root = Path(__file__).resolve().parents[2]
 app = root / "artifacts/macos/Lettore Fatture.app"
 executable = app / "Contents/MacOS/LettoreFatture"
 worker = app / "Contents/Resources/bridge/fatture"
+sample = Path(os.environ.get("FATTURE_SMOKE_INPUT", str(root / "tests/fixtures/invoice.xml")))
 
 
 def processes():
@@ -18,8 +19,12 @@ def processes():
 
 for mode in ("ready", "loading"):
     baseline = {int(pid) for pid, _, command in processes() if command == str(worker)}
-    environment = dict(os.environ, FATTURE_SMOKE_INPUT=str(root / "esempi/IT04270090261_0002I.xml"),
+    environment = dict(os.environ, FATTURE_SMOKE_INPUT=str(sample),
                        FATTURE_SMOKE_WINDOW_CLOSE=mode)
+    # The CI also exports Excel in the same step. Don't let that smoke-test
+    # branch bypass the real window-close action in ready mode.
+    environment.pop("FATTURE_SMOKE_EXPORT_PATH", None)
+    environment.pop("FATTURE_SMOKE_CLOSE", None)
     process = subprocess.Popen([str(executable), "--smoke-test"], env=environment,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     children = set()

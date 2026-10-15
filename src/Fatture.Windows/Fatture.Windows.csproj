@@ -10,12 +10,19 @@
     <ApplicationIcon>Assets/App.ico</ApplicationIcon>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <ApplicationDefaultFont>Segoe UI, 9pt</ApplicationDefaultFont>
-    <Version>0.3.0</Version>
+    <!-- No executable compression or runtime extraction at launch. Velopack
+         compresses only the installer/download, which is unpacked at install. -->
+    <PublishSingleFile>false</PublishSingleFile>
+    <EnableCompressionInSingleFile>false</EnableCompressionInSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>false</IncludeNativeLibrariesForSelfExtract>
     <FattureRuntimeVersion Condition="'$(FattureRuntimeVersion)' == ''">10.0.13</FattureRuntimeVersion>
     <Product>Lettore Fatture</Product>
     <Description>Visualizzatore locale di fatture elettroniche italiane</Description>
   </PropertyGroup>
-  <ItemGroup><ProjectReference Include="../Fatture.Cli/Fatture.Cli.csproj" /></ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Fatture.Cli/Fatture.Cli.csproj" />
+    <PackageReference Include="Velopack" Version="1.2.161" />
+  </ItemGroup>
   <!-- Scope the runtime version to .NET: the Windows SDK projection has its own
        version and must not inherit the global RuntimeFrameworkVersion property. -->
   <Target Name="SelectFattureDesktopRuntime" BeforeTargets="ProcessFrameworkReferences">

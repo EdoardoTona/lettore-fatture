@@ -2,9 +2,9 @@ name: Windows
 on:
   workflow_dispatch:
   push:
-    paths: ['src/**', 'tests/**', 'packaging/windows/**', 'Directory.Build.props', 'LettoreFatture.slnx', '.github/workflows/windows.yml']
+    paths: ['src/**', 'tests/**', 'packaging/windows/**', 'packaging/licenses/**', '.config/**', 'VERSION', 'Directory.Build.props', 'LettoreFatture.slnx', '.github/workflows/windows.yml']
   pull_request:
-    paths: ['src/**', 'tests/**', 'packaging/windows/**', 'Directory.Build.props', 'LettoreFatture.slnx', '.github/workflows/windows.yml']
+    paths: ['src/**', 'tests/**', 'packaging/windows/**', 'packaging/licenses/**', '.config/**', 'VERSION', 'Directory.Build.props', 'LettoreFatture.slnx', '.github/workflows/windows.yml']
 permissions:
   contents: read
 jobs:

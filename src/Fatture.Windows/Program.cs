@@ -1,4 +1,5 @@
 using Fatture.Cli;
+using Velopack;
 
 namespace Fatture.Windows;
 
@@ -7,6 +8,12 @@ internal static class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        VelopackApp.Build()
+            .SetAutoApplyOnStartup(false)
+            .OnAfterInstallFastCallback(_ => FileAssociations.Register())
+            .OnAfterUpdateFastCallback(_ => FileAssociations.Register())
+            .OnBeforeUninstallFastCallback(_ => FileAssociations.Unregister())
+            .Run();
         // The same executable hosts the worker. No second runtime is distributed.
         if (args is ["--core-bridge"])
         {

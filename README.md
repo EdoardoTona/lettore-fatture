@@ -39,8 +39,13 @@ i test sintetici del core funzionano anche senza quella cartella.
 
 ## Avvio su Windows
 
-Apri `LettoreFatture.exe` dal pacchetto `LettoreFatture-win-x64.zip` dopo averlo
-estratto. La versione portabile include .NET e non richiede un’installazione.
+Avvia `LettoreFatture-win-x64-Setup.exe`, oppure il Setup ARM64 sui PC ARM.
+L’installer Velopack include .NET, crea il collegamento nel menu Start e registra
+l’app in «Apri con…» senza cambiare i predefiniti. Si disinstalla dalle App
+installate di Windows. È disponibile anche lo ZIP portabile: estrai **tutta la
+cartella**, poi avvia `LettoreFatture.exe` mantenendo insieme DLL e runtime.
+L’eseguibile Windows non è compresso e non estrae .NET all’avvio; la compressione
+si applica soltanto ai pacchetti scaricabili, decompressi durante l’installazione.
 Requisito API: Windows 10 build 19041 o successiva; Windows 11 consigliato.
 
 Stesso schema della UI Mac: documenti a sinistra con X e selezione multipla,
@@ -56,7 +61,7 @@ da Esplora file vengono inoltrate alla finestra già aperta.
 - **Ctrl+Alt+I**: apri o chiudi le informazioni.
 - **Ctrl+rotella**: zoom PDF; **Pag↑ / Pag↓**: pagina precedente o successiva.
 
-Per «Apri con…», colloca prima l’app in una cartella permanente e usa
+Per «Apri con…» con la versione portabile, colloca l’app in una cartella permanente e usa
 **File → Associa estensioni…**. La registrazione riguarda solo l’utente corrente,
 non richiede amministratore e apre le impostazioni di Windows per scegliere i
 predefiniti. Per rimuoverla: `register.ps1 -Remove` dalla cartella dell’app.
@@ -72,15 +77,54 @@ Per compilare (SDK .NET 10, PowerShell):
 ```powershell
 ./packaging/windows/package.ps1
 ./packaging/windows/verify.ps1
+./packaging/windows/installer.ps1 -SkipBuild
 ```
 
 Lo script produce `artifacts/windows-x64/` e `artifacts/LettoreFatture-win-x64.zip`.
-`-Runtime win-arm64` predispone il pacchetto ARM64. `-FrameworkDependent` genera
+L’installer e i metadati Velopack sono in `artifacts/releases/win-x64/`.
+`-Runtime win-arm64` genera i pacchetti ARM64. `-Version` sovrascrive la versione
+letta da `VERSION`. `-FrameworkDependent` sul solo `package.ps1` genera
 una versione più piccola che richiede .NET Desktop Runtime 10.0.13 sul PC.
 La build può essere eseguita anche da Mac/Linux; la verifica grafica richiede
 Windows. Il pacchetto di sviluppo non è firmato con Authenticode.
 Il workflow [Windows](.github/workflows/windows.yml) prepara build, test e ZIP
 su un runner Windows quando il repository viene pubblicato su GitHub.
+Tool e SDK Velopack sono entrambi fissati a 1.2.161; lo script ripristina il tool
+locale da `.config/dotnet-tools.json`, senza installazioni globali. Non sono
+abilitati controlli o download automatici degli aggiornamenti nell’app.
+
+## Pubblicazione di una release
+
+Il workflow [Release](.github/workflows/release.yml) compila e verifica su runner
+nativi Windows x64, Windows ARM64, Mac Apple Silicon e Mac Intel. Pubblica una
+sola release dopo il successo di tutte le build, con installer Windows, ZIP
+portabili, pacchetti/feed Velopack, DMG/ZIP macOS e `SHA256SUMS.txt`.
+
+Per pubblicare una nuova versione, aggiorna `VERSION`, crea il commit e manda il
+tag corrispondente sul repository. Esempio per la versione corrente:
+
+```sh
+git tag v0.4.0
+git push origin main
+git push origin v0.4.0
+```
+
+Puoi anche avviare manualmente **Actions → Release → Run workflow**, indicando
+un tag già esistente. Tag e `VERSION` devono coincidere. Un suffisso come
+`v0.4.0-beta.1` genera una prerelease. Il workflow valida contenuti, architetture
+e hash prima dell’upload; prepara una bozza, carica gli asset e poi la pubblica.
+Un retry può completare una bozza, ma non sovrascrive una release già pubblicata.
+Usa il `GITHUB_TOKEN` automatico con scrittura limitata al job finale.
+
+Per preparare i pacchetti Mac localmente:
+
+```sh
+bash packaging/macos/release.sh osx-arm64
+FATTURE_OUTPUT_DIR="$PWD/artifacts/macos-intel" bash packaging/macos/release.sh osx-x64
+```
+
+I pacchetti di questa configurazione non includono una firma Authenticode o
+Developer ID/notarizzazione: il Mac usa ancora la firma ad hoc di sviluppo.
 
 ## Avvio su macOS
 
@@ -226,6 +270,6 @@ prova la libreria nativa sui campioni e l’estensione nel servizio reale macOS.
 
 Risultati e misure della build corrente: [verifiche eseguite](docs/verification.md).
 
-Dipendenze: PDFsharp/MigraDoc e MimeKitLite (MIT), librerie crittografiche .NET.
+Dipendenze: PDFsharp/MigraDoc, MimeKitLite e Velopack su Windows (MIT), librerie crittografiche .NET.
 I font Arial sono letti dal sistema e incorporati nel PDF; nessun font di sistema
 viene ridistribuito nel bundle.

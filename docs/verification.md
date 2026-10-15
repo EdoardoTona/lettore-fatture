@@ -54,23 +54,25 @@ di packaging riconosce automaticamente. Il runtime di sistema non è stato
 modificato. Su altri Mac di sviluppo occorre installare un runtime .NET
 aggiornato oppure specificare `FATTURE_DOTNET`.
 
-La build Intel è predisposta, ma non è stata eseguita su un Mac Intel.
+La build Intel è stata compilata dal Mac ARM64, ma non eseguita su un Mac Intel.
 Non è ancora verificata la distribuzione notarizzata.
 
 ## Windows: verificato e da verificare
 
-La UI Windows è stata compilata da Mac per x64 senza avvisi o errori; lo script
+La UI Windows è stata compilata da Mac per x64 e ARM64 senza avvisi o errori; lo script
 PowerShell `packaging/windows/package.ps1` è stato eseguito realmente per
 produrre l’eseguibile portabile e lo ZIP con licenze. Runtime Core e Desktop
 10.0.13 inclusi, icona e manifest Windows incorporati, sottosistema GUI.
-L’eseguibile è circa 56 MiB. I test del core e del protocollo passano sul Mac;
-la build Mac è stata ricompilata dopo l’estrazione del server JSON comune.
+La distribuzione 0.4.0 contiene i file del runtime separati: compressione del
+bundle eseguibile ed estrazione delle librerie native sono disabilitate.
+I test del core e del protocollo passano sul Mac; la build Mac è stata ricompilata
+dopo l’estrazione del server JSON comune.
 
 Non è disponibile un ambiente Windows in questa sessione: **l’agente non ha
 eseguito su Windows le verifiche di UI, rendering Windows.Data.Pdf, stampa,
 associazioni, inoltro alla stessa istanza e chiusura del worker**. Non sono state
-misurate prestazioni o memoria effettive dell’app Windows. ARM64 è configurato
-ma non provato.
+misurate prestazioni o memoria effettive dell’app Windows. L’esecuzione ARM64
+non è ancora stata provata.
 
 Uno screenshot dell’utente conferma l’avvio su Windows e la visualizzazione di
 una fattura, mostrando però il testo della lista tagliato in altezza. La lista
@@ -87,3 +89,23 @@ Il workflow `.github/workflows/windows.yml` esegue questa verifica su Windows
 quando il codice viene pubblicato su GitHub; non è stato avviato qui.
 Stampa, drag and drop, Apri con, apertura nella stessa istanza e layout sui
 diversi DPI richiedono anche una prova manuale su PC.
+
+## Installer e release 0.4.0
+
+- Generati realmente i due Setup Velopack per Windows x64/ARM64; la CLI 1.2.161
+  verifica la presenza di `VelopackApp.Run()` nell’entry point. SDK e tool hanno
+  la stessa versione. L’installazione/disinstallazione non è stata eseguita sul Mac.
+- Generati DMG e ZIP per macOS ARM64 e Intel, con versione dell’app e
+  dell’estensione Quick Look allineate a `VERSION`.
+- Verificati tutti i 16 asset con `packaging/validate-release.py`: architetture
+  PE/Mach-O, versioni dei plist, runtime inclusi, hash dei pacchetti Velopack,
+  integrità ZIP e footer DMG. Generato `SHA256SUMS.txt`.
+- Workflow validati con actionlint 1.7.12; script PowerShell verificati con il
+  parser reale ed eseguiti per creare gli installer. Tag non validi o non coerenti
+  con `VERSION` vengono rifiutati. La pipeline completa non è stata avviata su
+  GitHub in questa sessione.
+- Sul Mac ARM64: fixture sintetica della CI aperta nella UI, export Excel,
+  Quick Look e uscita app/core verificati sul bundle 0.4.0; 17 test .NET superati.
+
+I pacchetti Windows non sono firmati con Authenticode; quelli Mac usano firma
+ad hoc, senza Developer ID e notarizzazione.

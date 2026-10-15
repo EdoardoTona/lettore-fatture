@@ -1,10 +1,15 @@
 param(
     [ValidateSet('win-x64', 'win-arm64')]
     [string]$Runtime = 'win-x64',
+    [string]$Version = '',
     [switch]$FrameworkDependent
 )
 $ErrorActionPreference = 'Stop'
 $root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
+if (-not $Version) { $Version = (Get-Content (Join-Path $root 'VERSION') -Raw).Trim() }
+if ($Version -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$') {
+    throw 'Versione non valida: usa una versione SemVer, ad esempio 0.4.0 o 0.4.0-beta.1.'
+}
 $output = Join-Path $root "artifacts/windows-$($Runtime.Substring(4))"
 $stage = Join-Path $root ('artifacts/.windows-package-' + [guid]::NewGuid().ToString('N'))
 $publish = Join-Path $stage 'publish'
@@ -16,12 +21,14 @@ try {
     $selfContained = if ($FrameworkDependent) { 'false' } else { 'true' }
     & dotnet publish (Join-Path $root 'src/Fatture.Windows/Fatture.Windows.csproj') `
         -c Release -r $Runtime --self-contained $selfContained -m:1 -nodeReuse:false `
-        -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true `
-        -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishTrimmed=false `
+        "-p:Version=$Version" -p:PublishSingleFile=false -p:EnableCompressionInSingleFile=false `
+        -p:IncludeNativeLibrariesForSelfExtract=false -p:PublishTrimmed=false `
         -p:UseSharedCompilation=false -p:DebugType=none -p:DebugSymbols=false -o $publish
     if ($LASTEXITCODE -ne 0) { throw 'Compilazione Windows non riuscita.' }
     # The referenced console project contributes a config not used by this host.
-    Remove-Item (Join-Path $publish 'fatture.runtimeconfig.json') -ErrorAction SilentlyContinue
+    foreach ($unused in @('fatture.exe', 'fatture.deps.json', 'fatture.runtimeconfig.json')) {
+        Remove-Item (Join-Path $publish $unused) -ErrorAction SilentlyContinue
+    }
     $licenses = Join-Path $publish 'Licenses'
     New-Item -ItemType Directory $licenses | Out-Null
     Copy-Item (Join-Path $root 'packaging/licenses/*.txt') $licenses
@@ -40,7 +47,8 @@ try {
     @'
 Lettore Fatture per Windows
 
-Avvia LettoreFatture.exe e trascina XML, P7M, EML o PDF nella finestra.
+Mantieni insieme tutti i file della cartella. Avvia LettoreFatture.exe
+e trascina XML, P7M, EML o PDF nella finestra.
 Ctrl+O apre documenti; Ctrl+S salva il PDF; Ctrl+Maiusc+E esporta le fatture in Excel.
 Ctrl+clic/Maiusc+clic selezionano più documenti. X, Canc e Ctrl+W li chiudono.
 Il pannello Informazioni parte chiuso.
