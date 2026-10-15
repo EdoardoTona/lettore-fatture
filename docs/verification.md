@@ -66,11 +66,18 @@ produrre l’eseguibile portabile e lo ZIP con licenze. Runtime Core e Desktop
 L’eseguibile è circa 56 MiB. I test del core e del protocollo passano sul Mac;
 la build Mac è stata ricompilata dopo l’estrazione del server JSON comune.
 
-Non è disponibile un ambiente Windows in questa sessione: **UI, rendering
-Windows.Data.Pdf, stampa, associazioni, inoltro alla stessa istanza e chiusura
-del worker Windows non sono ancora stati eseguiti su Windows**. Non sono state
+Non è disponibile un ambiente Windows in questa sessione: **l’agente non ha
+eseguito su Windows le verifiche di UI, rendering Windows.Data.Pdf, stampa,
+associazioni, inoltro alla stessa istanza e chiusura del worker**. Non sono state
 misurate prestazioni o memoria effettive dell’app Windows. ARM64 è configurato
 ma non provato.
+
+Uno screenshot dell’utente conferma l’avvio su Windows e la visualizzazione di
+una fattura, mostrando però il testo della lista tagliato in altezza. La lista
+ora misura le due righe con il font e il contesto grafico effettivi, adatta
+altezza, margini e pulsante X ai DPI e si aggiorna al cambio di monitor/font.
+Un tooltip mostra i nomi completi. Pacchetto ricompilato; la verifica visiva
+della correzione sui diversi DPI resta da eseguire su Windows.
 
 `packaging/windows/verify.ps1` esegue una finestra reale su Windows con documenti
 e certificati sintetici: XML, P7M valido, email, raster PDF nativo, inspector
