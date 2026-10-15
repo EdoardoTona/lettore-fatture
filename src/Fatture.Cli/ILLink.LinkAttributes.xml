@@ -1,0 +1,41 @@
+<linker>
+  <!-- Both MigraDoc assemblies are rooted in full in Fatture.Cli.csproj.
+       These four warnings concern reflection over the preserved DOM, logging
+       metadata, and an unused internal diagnostic helper. No global suppression. -->
+  <assembly fullname="MigraDoc.DocumentObjectModel">
+    <type fullname="MigraDoc.DocumentObjectModel.Internals.Meta">
+      <method name="AddValueDescriptors">
+        <attribute fullname="System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute">
+          <argument>Trimming</argument><argument>IL2070</argument>
+          <property name="Justification">All DOM nested value types are preserved by TrimmerRootAssembly.</property>
+        </attribute>
+      </method>
+    </type>
+    <type fullname="MigraDoc.DocumentObjectModel.Internals.ValueDescriptor">
+      <method name="CreateValue">
+        <attribute fullname="System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute">
+          <argument>Trimming</argument><argument>IL2077</argument>
+          <property name="Justification">All DOM constructors are preserved by TrimmerRootAssembly.</property>
+        </attribute>
+      </method>
+    </type>
+  </assembly>
+  <assembly fullname="MigraDoc.Rendering">
+    <type fullname="MigraDoc.Rendering.PdfDocumentRenderer">
+      <method name="PrepareDocumentRenderer">
+        <attribute fullname="System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute">
+          <argument>Trimming</argument><argument>IL2026</argument>
+          <property name="Justification">Rendering is rooted in full; GetCurrentMethod is only used for logging.</property>
+        </attribute>
+      </method>
+    </type>
+    <type fullname="MigraDoc.Rendering.UnitTest.ValueDumper">
+      <method name="DumpValues">
+        <attribute fullname="System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute">
+          <argument>Trimming</argument><argument>IL2075</argument>
+          <property name="Justification">Diagnostic helper is unused; all DOM and rendering fields are preserved.</property>
+        </attribute>
+      </method>
+    </type>
+  </assembly>
+</linker>

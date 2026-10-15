@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>FatturePreviewCore</AssemblyName>
+    <PublishAot>true</PublishAot>
+    <NativeLib>Shared</NativeLib>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+    <!-- NativeAOT cannot consume ILLink's external attribute annotations.
+         Rooted MigraDoc assemblies and complete type metadata preserve these
+         reflection sites; keep their four known diagnostics visible as warnings. -->
+    <IlcGenerateCompleteTypeMetadata>true</IlcGenerateCompleteTypeMetadata>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);IL2026;IL2070;IL2075;IL2077</WarningsNotAsErrors>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="../Fatture.Core/Fatture.Core.csproj" /></ItemGroup>
+  <ItemGroup>
+    <TrimmerRootAssembly Include="System.Security.Cryptography.Xml" />
+    <TrimmerRootAssembly Include="System.Security.Cryptography" />
+    <TrimmerRootAssembly Include="MigraDoc.DocumentObjectModel" />
+    <TrimmerRootAssembly Include="MigraDoc.Rendering" />
+  </ItemGroup>
+</Project>

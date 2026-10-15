@@ -1,0 +1,31 @@
+# Build .NET e cache locali
+**/bin/
+**/obj/
+**/TestResults/
+/.build/
+/artifacts/
+
+# Documenti locali: contengono dati personali.
+/esempi/
+
+# macOS, Xcode e IDE
+.DS_Store
+._*
+.vs/
+.vscode/
+.idea/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+
+# Script di verifica Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Configurazione locale e certificati privati
+.env
+.env.*
+!.env.example
+*.p12
+*.pfx

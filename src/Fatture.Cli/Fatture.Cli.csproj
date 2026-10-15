@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>fatture</AssemblyName>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+    <!-- Keep MigraDoc intact: its DOM factory uses reflection over nested values. -->
+    <_ExtraTrimmerArgs>$(_ExtraTrimmerArgs) --link-attributes &quot;$(MSBuildThisFileDirectory)ILLink.LinkAttributes.xml&quot;</_ExtraTrimmerArgs>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="../Fatture.Core/Fatture.Core.csproj" /></ItemGroup>
+  <ItemGroup>
+    <!-- XMLDSig resolves algorithm names dynamically; MigraDoc uses DOM metadata. -->
+    <TrimmerRootAssembly Include="System.Security.Cryptography.Xml" />
+    <TrimmerRootAssembly Include="System.Security.Cryptography" />
+    <TrimmerRootAssembly Include="MigraDoc.DocumentObjectModel" />
+    <TrimmerRootAssembly Include="MigraDoc.Rendering" />
+  </ItemGroup>
+</Project>

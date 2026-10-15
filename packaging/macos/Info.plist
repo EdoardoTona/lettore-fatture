@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>CFBundleExecutable</key><string>LettoreFatture</string>
+  <key>CFBundleIdentifier</key><string>it.edoardotona.lettorefatture</string>
+  <key>CFBundleName</key><string>Lettore Fatture</string>
+  <key>CFBundleDisplayName</key><string>Lettore Fatture</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleShortVersionString</key><string>0.2.0</string>
+  <key>CFBundleVersion</key><string>2</string>
+  <key>CFBundleIconFile</key><string>LettoreFatture</string>
+  <key>LSMinimumSystemVersion</key><string>14.0</string>
+  <key>NSHighResolutionCapable</key><true/>
+  <key>NSPrincipalClass</key><string>NSApplication</string>
+  <key>CFBundleDocumentTypes</key><array>
+    <dict><key>CFBundleTypeName</key><string>Fattura elettronica XML</string><key>CFBundleTypeRole</key><string>Viewer</string><key>LSHandlerRank</key><string>Alternate</string><key>LSItemContentTypes</key><array><string>public.xml</string></array></dict>
+    <dict><key>CFBundleTypeName</key><string>Documento firmato P7M</string><key>CFBundleTypeRole</key><string>Viewer</string><key>LSHandlerRank</key><string>Alternate</string><key>LSItemContentTypes</key><array><string>it.edoardotona.pkcs7-document</string><string>com.rsa.pkcs-7-mime</string></array></dict>
+    <dict><key>CFBundleTypeName</key><string>Messaggio email EML</string><key>CFBundleTypeRole</key><string>Viewer</string><key>LSHandlerRank</key><string>Alternate</string><key>LSItemContentTypes</key><array><string>com.apple.mail.email</string><string>public.email-message</string><string>it.edoardotona.eml</string></array></dict>
+    <dict><key>CFBundleTypeName</key><string>Documento PDF</string><key>CFBundleTypeRole</key><string>Viewer</string><key>LSHandlerRank</key><string>Alternate</string><key>LSItemContentTypes</key><array><string>com.adobe.pdf</string></array></dict>
+  </array>
+  <key>UTImportedTypeDeclarations</key><array>
+    <dict><key>UTTypeIdentifier</key><string>it.edoardotona.pkcs7-document</string><key>UTTypeDescription</key><string>Documento firmato CAdES</string><key>UTTypeConformsTo</key><array><string>public.data</string></array><key>UTTypeTagSpecification</key><dict><key>public.filename-extension</key><array><string>p7m</string></array><key>public.mime-type</key><string>application/pkcs7-mime</string></dict></dict>
+    <dict><key>UTTypeIdentifier</key><string>it.edoardotona.eml</string><key>UTTypeDescription</key><string>Messaggio email</string><key>UTTypeConformsTo</key><array><string>public.email-message</string><string>public.data</string></array><key>UTTypeTagSpecification</key><dict><key>public.filename-extension</key><array><string>eml</string></array><key>public.mime-type</key><string>message/rfc822</string></dict></dict>
+  </array>
+</dict></plist>

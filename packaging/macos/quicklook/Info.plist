@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>CFBundleExecutable</key><string>FatturePreview</string>
+  <key>CFBundleIdentifier</key><string>it.edoardotona.lettorefatture.preview</string>
+  <key>CFBundleName</key><string>Anteprima fatture</string>
+  <key>CFBundlePackageType</key><string>XPC!</string>
+  <key>CFBundleShortVersionString</key><string>0.2.0</string>
+  <key>CFBundleVersion</key><string>2</string>
+  <key>LSMinimumSystemVersion</key><string>14.0</string>
+  <key>NSExtension</key><dict>
+    <key>NSExtensionPointIdentifier</key><string>com.apple.quicklook.preview</string>
+    <key>NSExtensionPrincipalClass</key><string>FatturePreviewProvider</string>
+    <key>NSExtensionAttributes</key><dict>
+      <key>QLIsDataBasedPreview</key><true/>
+      <key>QLSupportedContentTypes</key><array>
+        <string>public.xml</string>
+        <string>com.rsa.pkcs-7-mime</string>
+        <string>it.edoardotona.pkcs7-document</string>
+        <string>com.apple.mail.email</string>
+        <string>public.email-message</string>
+        <string>it.edoardotona.eml</string>
+      </array>
+    </dict>
+  </dict>
+</dict></plist>
