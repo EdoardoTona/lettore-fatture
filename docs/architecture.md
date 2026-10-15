@@ -25,8 +25,8 @@ Fatture.Core (stesso parser e renderer)
 ```
 
 Il motore non usa AppKit, PDFKit o percorsi specifici macOS, salvo la ricerca
-dei font che prevede anche Windows e Linux. La UI Windows potrà usare lo
-stesso protocollo JSON o referenziare direttamente il progetto Core.
+dei font che prevede anche Windows e Linux. La UI Windows usa lo stesso
+protocollo JSON tramite `Fatture.Cli.BridgeServer`.
 
 I sorgenti macOS sono in `src/Fatture.Mac/`: `App.swift` gestisce finestra e
 azioni, `DocumentViews.swift` i componenti AppKit/PDFKit, `Models.swift` i dati
@@ -38,6 +38,40 @@ Il bridge lavora su una coda seriale in background. La UI resta utilizzabile
 durante importazione e conversione; ogni documento generato ha un PDF pronto
 da visualizzare e salvare. Un solo processo .NET viene riutilizzato tra aperture.
 Il passaggio da un documento già aperto all’altro non richiede conversione.
+
+## Windows
+
+`Fatture.Windows` usa Windows Forms con controlli di sistema, finestra a tre
+pannelli e supporto DPI per monitor. `DesktopApplication` usa l’istanza singola
+del framework per inoltrare le aperture da Esplora file alla finestra esistente.
+`CoreBridge` avvia lo stesso eseguibile con `--core-bridge`, senza finestra: la
+modalità riusa il server della CLI. Si distribuisce un solo runtime .NET Desktop
+e si mantiene il ciclo di vita del core isolato come su Mac. Il processo viene
+terminato anche se si chiude la finestra durante un’importazione.
+
+`NativePdfView` usa [Windows.Data.Pdf](https://learn.microsoft.com/en-us/uwp/api/windows.data.pdf.pdfdocument)
+con [rendering delle pagine in uno stream](https://learn.microsoft.com/en-us/uwp/api/windows.data.pdf.pdfpage.rendertostreamasync).
+Dispone le pagine in un canvas scorrevole e renderizza soltanto quelle visibili,
+con raster limitati a 2400 pixel sul lato maggiore. La cache usa una soglia di
+32 MiB per espellere le pagine fuori vista; le pagine attualmente visibili sono
+mantenute anche se superano insieme la soglia. Rendering e sostituzione del PDF
+sono serializzati; le richieste obsolete vengono scartate e gli stream chiusi
+prima di eliminare i file. Questo evita un runtime browser e DLL PDF aggiuntive.
+L’anteprima è rasterizzata, quindi selezione e ricerca del testo richiedono un
+lettore esterno; il salvataggio conserva il PDF originale. La stampa usa un
+documento separato sul worker MTA e una pagina alla volta, fino a 3500 pixel,
+tramite `PrintDocument` e il dialogo di sistema.
+
+La registrazione segue i [ProgID e le Capabilities di Windows](https://learn.microsoft.com/en-us/windows/win32/shell/default-programs),
+in `HKCU`, con `OpenWithProgids` e comando eseguibile/percorso tra virgolette.
+Non modifica `UserChoice` o il valore predefinito delle estensioni: l’utente
+sceglie in Impostazioni. `--unregister` rimuove solo le chiavi dell’app.
+
+La distribuzione predefinita è un eseguibile self-contained compresso, con
+runtime Core e Desktop 10.0.13. Non si usa trimming su Windows Forms. Il progetto
+seleziona le versioni .NET senza forzare quella della proiezione Windows SDK,
+che ha una numerazione indipendente. Il [targeting Windows su Mac/Linux](https://learn.microsoft.com/en-us/dotnet/core/tools/sdk-errors/netsdk1100)
+permette la compilazione locale; il test grafico richiede Windows.
 
 ## Ricerca sulle librerie
 
@@ -151,7 +185,7 @@ oggetti già aperti) ed `exportPath`. Restituisce `export` con `invoiceCount`,
 
 ## Prossime iterazioni
 
-La prima revisione riguarda dimensioni dei pannelli, densità del PDF e scelta
-delle informazioni visibili. La UI Windows viene dopo l’approvazione della UI Mac.
+La prossima revisione riguarda la UI Windows su un PC reale: layout, DPI,
+scorrimento, stampa e integrazione con Esplora file.
 Possibili estensioni indipendenti: FSM10, firme S/MIME, esportazione degli
 allegati non PDF, PDF/A e validazione XSD facoltativa.

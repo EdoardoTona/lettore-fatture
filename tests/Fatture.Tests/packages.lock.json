@@ -137,6 +137,12 @@
           "xunit.extensibility.core": "[2.9.3]"
         }
       },
+      "fatture": {
+        "type": "Project",
+        "dependencies": {
+          "Fatture.Core": "[1.0.0, )"
+        }
+      },
       "fatture.core": {
         "type": "Project",
         "dependencies": {

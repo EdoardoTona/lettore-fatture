@@ -3,6 +3,7 @@
     <Project Path="src/Fatture.Cli/Fatture.Cli.csproj" />
     <Project Path="src/Fatture.Core/Fatture.Core.csproj" />
     <Project Path="src/Fatture.Preview/Fatture.Preview.csproj" />
+    <Project Path="src/Fatture.Windows/Fatture.Windows.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Fatture.Tests/Fatture.Tests.csproj" />

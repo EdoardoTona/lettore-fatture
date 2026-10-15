@@ -1,12 +1,13 @@
 # Lettore Fatture
 
-Visualizzatore locale di fatture elettroniche italiane: core **C# / .NET 10**, app
-**macOS nativa AppKit + PDFKit**. Il core è riutilizzabile su Windows; la UI Windows
-è prevista dopo la revisione della versione Mac.
+Visualizzatore locale di fatture elettroniche italiane: core **C# / .NET 10**,
+app **macOS nativa AppKit + PDFKit** e app **Windows Forms + PDF di sistema**.
 
 La finestra mostra i documenti a sinistra, il PDF al centro e un pannello
 informazioni richiudibile a destra. Supporta apertura multipla, drag and drop,
 Finder / Dock / «Apri con…», salvataggio PDF, stampa e zoom.
+Su Windows supporta Esplora file / «Apri con…», Ctrl-clic e Maiusc-clic per la
+selezione multipla, Canc e Ctrl+W per chiudere i documenti.
 Il pannello informazioni parte chiuso e si apre dal pulsante nella barra strumenti.
 Chiudendo la finestra si chiudono l’app e il processo C#; i PDF temporanei
 di sessione vengono rimossi dopo l’arresto del motore.
@@ -23,6 +24,7 @@ il pulsante «Chiudi selezionati», Canc oppure ⌘W.
 | `src/Fatture.Mac/` | App nativa Swift: finestra, componenti UI, modelli e bridge |
 | `src/Fatture.Mac/QuickLook/` | Estensione Swift per le anteprime nel Finder |
 | `src/Fatture.Preview/` | Libreria C# NativeAOT incorporata nell’estensione |
+| `src/Fatture.Windows/` | UI Windows, anteprima PDF nativa e integrazione con Esplora file |
 | `tests/Fatture.Tests/` | Test del core con documenti e certificati sintetici |
 | `packaging/` | Script di build/verifica, plist, entitlement e licenze dipendenze |
 | `docs/` | Architettura, scelte tecniche e risultati delle verifiche |
@@ -34,6 +36,51 @@ dallo script macOS. I lock file NuGet sono versionati. `.editorconfig` e
 `artifacts/`, `.build/`, `bin/`, `obj/` e i documenti privati in `esempi/` sono
 esclusi da Git. Gli esempi locali servono solo alle verifiche di integrazione:
 i test sintetici del core funzionano anche senza quella cartella.
+
+## Avvio su Windows
+
+Apri `LettoreFatture.exe` dal pacchetto `LettoreFatture-win-x64.zip` dopo averlo
+estratto. La versione portabile include .NET e non richiede un’installazione.
+Requisito API: Windows 10 build 19041 o successiva; Windows 11 consigliato.
+
+Stesso schema della UI Mac: documenti a sinistra con X e selezione multipla,
+PDF al centro, informazioni e firme a destra inizialmente chiuse. Apertura
+multipla e drag and drop accettano XML, P7M, EML e PDF. Le aperture successive
+da Esplora file vengono inoltrate alla finestra già aperta.
+
+- **Ctrl+O**: apri documenti.
+- **Ctrl+S**: salva il PDF selezionato.
+- **Ctrl+Maiusc+E**: esporta tutte le fatture aperte in Excel.
+- **Ctrl+P**: stampa con il dialogo di sistema, anche per intervallo di pagine.
+- **Ctrl+W / Canc**: chiudi i documenti selezionati.
+- **Ctrl+Alt+I**: apri o chiudi le informazioni.
+- **Ctrl+rotella**: zoom PDF; **Pag↑ / Pag↓**: pagina precedente o successiva.
+
+Per «Apri con…», colloca prima l’app in una cartella permanente e usa
+**File → Associa estensioni…**. La registrazione riguarda solo l’utente corrente,
+non richiede amministratore e apre le impostazioni di Windows per scegliere i
+predefiniti. Per rimuoverla: `register.ps1 -Remove` dalla cartella dell’app.
+
+Il visualizzatore usa il motore PDF di Windows, renderizza soltanto le pagine
+visibili e mantiene una cache limitata. Non incorpora un browser. L’anteprima
+attuale non seleziona o cerca il testo: **Vista → Apri PDF nel lettore di sistema**
+permette di usare un altro lettore. Il PDF salvato conserva i byte originali e
+il testo selezionabile. Non è ancora incluso un preview handler per Esplora file.
+
+Per compilare (SDK .NET 10, PowerShell):
+
+```powershell
+./packaging/windows/package.ps1
+./packaging/windows/verify.ps1
+```
+
+Lo script produce `artifacts/windows-x64/` e `artifacts/LettoreFatture-win-x64.zip`.
+`-Runtime win-arm64` predispone il pacchetto ARM64. `-FrameworkDependent` genera
+una versione più piccola che richiede .NET Desktop Runtime 10.0.13 sul PC.
+La build può essere eseguita anche da Mac/Linux; la verifica grafica richiede
+Windows. Il pacchetto di sviluppo non è firmato con Authenticode.
+Il workflow [Windows](.github/workflows/windows.yml) prepara build, test e ZIP
+su un runner Windows quando il repository viene pubblicato su GitHub.
 
 ## Avvio su macOS
 

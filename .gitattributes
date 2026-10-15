@@ -6,8 +6,11 @@
 *.swift text eol=lf
 *.sh text eol=lf
 *.py text eol=lf
+*.ps1 text eol=lf
+*.yml text eol=lf
 *.json text eol=lf
 *.xml text eol=lf
 *.plist text eol=lf
 *.entitlements text eol=lf
 *.md text eol=lf
+*.ico binary

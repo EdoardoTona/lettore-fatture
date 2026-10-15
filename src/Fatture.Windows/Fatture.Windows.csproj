@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <UseWindowsForms>true</UseWindowsForms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <AssemblyName>LettoreFatture</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets/App.ico</ApplicationIcon>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <ApplicationDefaultFont>Segoe UI, 9pt</ApplicationDefaultFont>
+    <Version>0.3.0</Version>
+    <FattureRuntimeVersion Condition="'$(FattureRuntimeVersion)' == ''">10.0.13</FattureRuntimeVersion>
+    <Product>Lettore Fatture</Product>
+    <Description>Visualizzatore locale di fatture elettroniche italiane</Description>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="../Fatture.Cli/Fatture.Cli.csproj" /></ItemGroup>
+  <!-- Scope the runtime version to .NET: the Windows SDK projection has its own
+       version and must not inherit the global RuntimeFrameworkVersion property. -->
+  <Target Name="SelectFattureDesktopRuntime" BeforeTargets="ProcessFrameworkReferences">
+    <ItemGroup>
+      <KnownFrameworkReference Condition="'%(KnownFrameworkReference.RuntimeFrameworkName)' == 'Microsoft.WindowsDesktop.App'">
+        <LatestRuntimeFrameworkVersion>$(FattureRuntimeVersion)</LatestRuntimeFrameworkVersion>
+      </KnownFrameworkReference>
+      <FrameworkReference Condition="'%(FrameworkReference.Identity)' == 'Microsoft.NETCore.App' Or '%(FrameworkReference.Identity)' == 'Microsoft.WindowsDesktop.App.WindowsForms'">
+        <RuntimeFrameworkVersion>$(FattureRuntimeVersion)</RuntimeFrameworkVersion>
+      </FrameworkReference>
+    </ItemGroup>
+  </Target>
+</Project>
